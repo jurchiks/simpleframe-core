@@ -80,6 +80,19 @@ final class App
 		}
 	}
 	
+	public static function getTemplatingEngine()
+	{
+		static $engine = null;
+		
+		if ($engine === null)
+		{
+			$engine = new Engine(ROOT_DIR . '/app/templates/');
+			$engine->addRoot(__DIR__ . '/templates/');
+		}
+		
+		return $engine;
+	}
+	
 	/**
 	 * @param string $rootDir : the root directory of the project
 	 */
@@ -117,6 +130,8 @@ final class App
 		{
 			date_default_timezone_set($timezone);
 		}
+		
+		self::render();
 	}
 	
 	private static function init()
@@ -244,20 +259,7 @@ final class App
 		);
 	}
 	
-	public static function getTemplatingEngine()
-	{
-		static $engine = null;
-		
-		if ($engine === null)
-		{
-			$engine = new Engine(ROOT_DIR . '/app/templates/');
-			$engine->addRoot(__DIR__ . '/templates/');
-		}
-		
-		return $engine;
-	}
-	
-	public static function render()
+	private static function render()
 	{
 		$argv = ($GLOBALS['argv'] ?? []);
 		$data = [];
