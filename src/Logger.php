@@ -15,11 +15,12 @@ class Logger
 	
 	/**
 	 * @param int $logLevel : one of the Logger constants
-	 * @param string $message : the message to log
+	 * @param string $message : the message to log; may contain parameter placeholders in sprintf()-accepted format
+	 * @param string[] $parameters : optional message parameters
 	 */
-	public static function log(int $logLevel, string $message)
+	public static function log(int $logLevel, string $message, ...$parameters)
 	{
-		self::getDefaultLogger()->log($logLevel, $message);
+		self::getDefaultLogger()->log($logLevel, $message, ...$parameters);
 	}
 	
 	private static function getDefaultLogger()
