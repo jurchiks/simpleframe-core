@@ -3,6 +3,8 @@ namespace simpleframe;
 
 use Exception;
 use js\tools\commons\exceptions\LogException;
+use js\tools\commons\http\Request;
+use js\tools\commons\http\Uri;
 use js\tools\commons\templating\Engine;
 use RuntimeException;
 use simpleframe\responses\ErrorResponse;
@@ -16,8 +18,6 @@ use UnexpectedValueException;
 
 final class App
 {
-	const REQUEST_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
-	
 	/** @var callable[] */
 	private static $exceptionHandlers = [];
 	/** @var callable[] */
@@ -266,7 +266,7 @@ final class App
 		
 		if (isset($argv[0]))
 		{
-			if (!isset($argv[1], $argv[2]) || !in_array($argv[1], self::REQUEST_METHODS))
+			if (!isset($argv[1], $argv[2]) || !in_array($argv[1], Request::METHODS))
 			{
 				if (isset(self::$consoleHandlers[$argv[1]]))
 				{
@@ -278,7 +278,7 @@ final class App
 				echo 'Examples:', PHP_EOL, //
 					"\tphp index.php method path[ data]", PHP_EOL, //
 					"\tphp index.php get /foo", PHP_EOL, //
-					"\tphp index.php get /foo/bar a=1&b=2", PHP_EOL, //
+					"\tphp index.php get -s /foo/bar a=1&b=2", PHP_EOL, //
 					"\tphp index.php post /foo/bar a=1&b=2", PHP_EOL, //
 					"\tphp index.php delete /foo/bar a=1&b=2", PHP_EOL, //
 					"\t OR", PHP_EOL, //
@@ -286,42 +286,36 @@ final class App
 				exit(1);
 			}
 			
-			$method = $argv[1];
-			$route = $argv[2];
-			$referer = '';
+			$i = 1;
+			$method = $argv[$i];
 			
-			if (isset($argv[3]))
+			if ($argv[$i + 1] === '-s')
 			{
-				parse_str($argv[3], $data);
-			}
-		}
-		else
-		{
-			$method = strtolower($_SERVER['REQUEST_METHOD']);
-			$route = $_SERVER['REQUEST_URI'];
-			$referer = $_SERVER['HTTP_REFERER'] ?? '';
-			
-			if (!in_array($method, self::REQUEST_METHODS))
-			{
-				throw new RuntimeException('Unsupported request method ' . $method);
-			}
-			
-			if ($method === 'get')
-			{
-				$data = $_GET;
-			}
-			else if ($method === 'post')
-			{
-				$data = $_POST;
+				$secure = true;
+				$i++;
 			}
 			else
 			{
-				// PHP does not automatically populate $_PUT and $_DELETE variables
-				parse_str(file_get_contents('php://input'), $data);
+				$secure = false;
 			}
+			
+			$route = $argv[$i + 1];
+			
+			if (isset($argv[$i + 2]))
+			{
+				parse_str($argv[$i + 2], $data);
+			}
+			
+			$url = 'http' . ($secure ? 's' : '') . '://';
+			$url .= Config::getString('host', 'domain.tld');
+			$url .= '/' . trim($route, '/');
+			
+			$request = new Request($method, new Uri($url), $data, '');
 		}
-		
-		$request = new Request($method, $route, $data, $referer);
+		else
+		{
+			$request = Request::createFromGlobals();
+		}
 		
 		Router::render($request);
 	}

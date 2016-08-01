@@ -1,8 +1,8 @@
 <?php
 namespace simpleframe\routing;
 
+use js\tools\commons\http\Request;
 use js\tools\commons\http\Uri;
-use simpleframe\Request;
 use simpleframe\routing\exceptions\RouteNotFoundException;
 
 class Router
@@ -13,7 +13,16 @@ class Router
 	public static function addRoute(string $name, string $url, callable $handler, array $methods = [])
 	{
 		// using name as key only to prevent multiple routes with the same name
-		self::$routes[$name] = new Route($url, $handler, $name, $methods);
+		self::$routes[$name] = (new Route($url, $handler, $name))
+			->setAcceptedMethods(...$methods);
+	}
+	
+	public static function addRoutes(Route... $routes)
+	{
+		foreach ($routes as $route)
+		{
+			self::$routes[$route->getName()] = $route;
+		}
 	}
 	
 	public static function render(Request $request)
@@ -50,7 +59,9 @@ class Router
 		{
 			$route = self::$routes[$name]->generateLink($namedParams);
 			
-			return new Uri($route, true);
+			return Uri::createFromGlobals()
+				->setPath($route)
+				->setQuery('');
 		}
 		
 		return null;

@@ -4,13 +4,12 @@ namespace simpleframe\routing;
 use Closure;
 use Exception;
 use InvalidArgumentException;
+use js\tools\commons\http\Request;
 use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
-use simpleframe\App;
 use simpleframe\EventHandler;
-use simpleframe\Request;
 use simpleframe\responses\Response;
 use simpleframe\routing\exceptions\RouteException;
 use simpleframe\routing\exceptions\RouteParameterException;
@@ -27,8 +26,11 @@ class Route
 	private $parameters;
 	/** @var string */
 	private $pattern;
-	/** @var string[] */
-	private $methods;
+	/** @var array */
+	private $requirements = [
+		'methods' => Request::METHODS,
+		'https'   => false,
+	];
 	
 	private static $primitiveTypePatterns = [
 		'int'    => '-?\d+',
@@ -41,30 +43,38 @@ class Route
 		Request::class,
 	];
 	
-	public function __construct(string $url, callable $handler, string $name, array $methods)
+	public function __construct(string $url, callable $handler, string $name)
 	{
 		$this->name = $name;
 		$this->handler = $handler;
 		$this->url = '/' . trim($url, '/');
 		$this->parameters = $this->parseParameters();
 		$this->pattern = self::generatePattern($this->url, $this->parameters);
-		
+	}
+	
+	public function setAcceptedMethods(...$methods)
+	{
 		if (empty($methods))
 		{
-			$this->methods = App::REQUEST_METHODS;
+			$methods = Request::METHODS;
 		}
 		else
 		{
 			foreach ($methods as $method)
 			{
-				if (!in_array($method, App::REQUEST_METHODS))
+				if (!in_array($method, Request::METHODS))
 				{
 					throw new RouteException('Unsupported method "' . $method . '"');
 				}
 			}
-			
-			$this->methods = $methods;
 		}
+		
+		$this->requirements['methods'] = $methods;
+	}
+	
+	public function setRequireHttps(bool $requireHttps)
+	{
+		$this->requirements['https'] = $requireHttps;
 	}
 	
 	public function getUrl()
@@ -123,12 +133,20 @@ class Route
 	
 	public function render(Request $request)
 	{
-		if (!in_array($request->getMethod(), $this->methods))
+		if (!in_array($request->getMethod(), $this->requirements['methods']))
 		{
 			return false;
 		}
 		
-		if (preg_match($this->pattern, $request->getPath(), $urlParameters) !== 1)
+		$path = $request->getUri()->getPath();
+		$path = '/' . trim($path, '/');
+		
+		if (preg_match($this->pattern, $path, $urlParameters) !== 1)
+		{
+			return false;
+		}
+		
+		if ($this->requirements['https'] && !$request->isSecure())
 		{
 			return false;
 		}
@@ -139,8 +157,7 @@ class Route
 		
 		EventHandler::trigger(EventHandler::ON_ROUTE_MATCH, $this->name, $realParameters);
 		
-		$handler = $this->handler; // because PHPStorm doesn't recognise PHP7's ($this->handler)($params)...
-		$response = $handler(...$realParameters);
+		$response = ($this->handler)(...$realParameters);
 		
 		self::handleResponse($response);
 		
