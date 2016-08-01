@@ -52,7 +52,7 @@ class Route
 		$this->pattern = self::generatePattern($this->url, $this->parameters);
 	}
 	
-	public function setAcceptedMethods(...$methods)
+	public function setAcceptedMethods(...$methods): Route
 	{
 		if (empty($methods))
 		{
@@ -70,11 +70,15 @@ class Route
 		}
 		
 		$this->requirements['methods'] = $methods;
+		
+		return $this;
 	}
 	
-	public function setRequireHttps(bool $requireHttps)
+	public function setRequireHttps(bool $requireHttps): Route
 	{
 		$this->requirements['https'] = $requireHttps;
+		
+		return $this;
 	}
 	
 	public function getUrl()
