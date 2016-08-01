@@ -310,7 +310,7 @@ final class App
 			$url .= Config::getString('host', 'domain.tld');
 			$url .= '/' . trim($route, '/');
 			
-			$request = new Request($method, new Uri($url), $data, '');
+			$request = new Request($method, new Uri($url), $data, [], '');
 		}
 		else
 		{
