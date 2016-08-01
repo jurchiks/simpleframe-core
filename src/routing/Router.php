@@ -3,6 +3,7 @@ namespace simpleframe\routing;
 
 use js\tools\commons\http\Request;
 use js\tools\commons\http\Uri;
+use simpleframe\App;
 use simpleframe\routing\exceptions\RouteNotFoundException;
 
 class Router
@@ -58,10 +59,16 @@ class Router
 		if (isset(self::$routes[$name]))
 		{
 			$route = self::$routes[$name]->generateLink($namedParams);
-			
-			return Uri::createFromGlobals()
+			$uri = App::getRequest()->getUri()->copy()
 				->setPath($route)
 				->setQuery('');
+			
+			if (self::$routes[$name]->getRequireHttps())
+			{
+				$uri->setScheme('https');
+			}
+			
+			return $uri;
 		}
 		
 		return null;

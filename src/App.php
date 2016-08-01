@@ -93,6 +93,52 @@ final class App
 		return $engine;
 	}
 	
+	public static function getRequest(): Request
+	{
+		static $request = null;
+		
+		if ($request === null)
+		{
+			$data = [];
+			
+			if (isset($GLOBALS['argc']) && ($GLOBALS['argc'] > 0))
+			{
+				$argv = $GLOBALS['argv'];
+				$i = 1;
+				$method = $argv[$i];
+				
+				if ($argv[$i + 1] === '-s')
+				{
+					$secure = true;
+					$i++;
+				}
+				else
+				{
+					$secure = false;
+				}
+				
+				$route = $argv[$i + 1];
+				
+				if (isset($argv[$i + 2]))
+				{
+					parse_str($argv[$i + 2], $data);
+				}
+				
+				$url = 'http' . ($secure ? 's' : '') . '://';
+				$url .= Config::getString('host', 'domain.tld');
+				$url .= '/' . trim($route, '/');
+				
+				$request = new Request($method, new Uri($url), $data, [], '');
+			}
+			else
+			{
+				$request = Request::createFromGlobals();
+			}
+		}
+		
+		return $request;
+	}
+	
 	/**
 	 * @param string $rootDir : the root directory of the project
 	 */
@@ -261,11 +307,10 @@ final class App
 	
 	private static function render()
 	{
-		$argv = ($GLOBALS['argv'] ?? []);
-		$data = [];
-		
-		if (isset($argv[0]))
+		if (isset($GLOBALS['argc']) && ($GLOBALS['argc'] > 0))
 		{
+			$argv = ($GLOBALS['argv'] ?? []);
+			
 			if (!isset($argv[1], $argv[2]) || !in_array($argv[1], Request::METHODS))
 			{
 				if (isset(self::$consoleHandlers[$argv[1]]))
@@ -285,38 +330,8 @@ final class App
 					"\tphp index.php command[ arguments]";
 				exit(1);
 			}
-			
-			$i = 1;
-			$method = $argv[$i];
-			
-			if ($argv[$i + 1] === '-s')
-			{
-				$secure = true;
-				$i++;
-			}
-			else
-			{
-				$secure = false;
-			}
-			
-			$route = $argv[$i + 1];
-			
-			if (isset($argv[$i + 2]))
-			{
-				parse_str($argv[$i + 2], $data);
-			}
-			
-			$url = 'http' . ($secure ? 's' : '') . '://';
-			$url .= Config::getString('host', 'domain.tld');
-			$url .= '/' . trim($route, '/');
-			
-			$request = new Request($method, new Uri($url), $data, [], '');
-		}
-		else
-		{
-			$request = Request::createFromGlobals();
 		}
 		
-		Router::render($request);
+		Router::render(self::getRequest());
 	}
 }
