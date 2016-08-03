@@ -291,11 +291,6 @@ final class App
 					{
 						$handler();
 					}
-					catch (Exception $e)
-					{
-						// TODO HHVM support for Throwable required
-						$log($e);
-					}
 					catch (Throwable $t)
 					{
 						$log($t);

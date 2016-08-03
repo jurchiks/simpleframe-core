@@ -432,23 +432,13 @@ class Route
 	
 	private static function getParameterType(ReflectionParameter $parameter)
 	{
-		// TODO HHVM support for PHP7 scalars required
-		static $map = [
-			'HH\int'    => 'int',
-			'HH\float'  => 'float',
-			'HH\bool'   => 'bool',
-			'HH\string' => 'string',
-		];
-		
 		if (!$parameter->hasType())
 		{
 			// no explicit type specified, assuming anything is allowed
 			return 'string';
 		}
 		
-		$type = $parameter->getType()->__toString();
-		
-		return ($map[$type] ?? $type);
+		return $parameter->getType()->__toString();
 	}
 	
 	private static function getVariableType($variable)

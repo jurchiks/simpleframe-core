@@ -6,12 +6,8 @@ use Throwable;
 
 class ExceptionResponse extends ErrorResponse
 {
-	/**
-	 * @param Exception|Throwable $e
-	 */
-	public function __construct($e)
+	public function __construct(Throwable $e)
 	{
-		// TODO HHVM support for Throwable required
 		parent::__construct(self::makeContent($e));
 	}
 	
@@ -20,9 +16,8 @@ class ExceptionResponse extends ErrorResponse
 		parent::render();
 	}
 	
-	private static function makeContent($e): string
+	private static function makeContent(Throwable $e): string
 	{
-		/** @var Exception|Throwable $e */
 		$message = get_class($e) . ": {$e->getMessage()} - in {$e->getFile()} on line {$e->getLine()}";
 		$trace = self::makeTrace($e);
 		
@@ -36,9 +31,8 @@ class ExceptionResponse extends ErrorResponse
 		}
 	}
 	
-	private static function makeTrace($e): string
+	private static function makeTrace(Throwable $e): string
 	{
-		/** @var Exception|Throwable $e */
 		$trace = [];
 		
 		foreach ($e->getTrace() as $item)
