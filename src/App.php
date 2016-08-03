@@ -315,8 +315,7 @@ final class App
 			{
 				if (isset(self::$consoleHandlers[$argv[1]]))
 				{
-					$handler = self::$consoleHandlers[$argv[1]]; // PHPStorm and (self::$var)($args) again...
-					$handler(...array_slice($argv, 2));
+					(self::$consoleHandlers[$argv[1]])(...array_slice($argv, 2));
 					exit();
 				}
 				
