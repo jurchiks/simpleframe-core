@@ -14,8 +14,17 @@ class RedirectResponse implements Response
 	
 	public function render()
 	{
-		http_response_code($this->isPermanent ? 301 : 302);
-		header('Location: ' . $this->url);
+		if (PHP_SAPI === 'cli')
+		{
+			echo ($this->isPermanent ? 'permanent' : 'temporary'), ' redirect to ', $this->url;
+			// TODO perhaps someday implement redirects in console?
+		}
+		else
+		{
+			http_response_code($this->isPermanent ? 301 : 302);
+			header('Location: ' . $this->url);
+		}
+		
 		die();
 	}
 }
