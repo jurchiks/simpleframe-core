@@ -155,18 +155,18 @@ class Route
 			return false;
 		}
 		
-		if ($this->requirements['https'] && !$request->isSecure())
-		{
-			return false;
-		}
-		
-		$realParameters = self::getParameterValues(
+		$realParameters = self::getParameters(
 			$this->getHandlerParameters(), array_filter($urlParameters), $request
 		);
 		
 		EventHandler::trigger(EventHandler::ON_ROUTE_MATCH, $this, $realParameters, $request);
 		
-		$response = ($this->handler)(...$realParameters);
+		if ($this->requirements['https'] && !$request->isSecure())
+		{
+			return false;
+		}
+		
+		$response = ($this->handler)(...array_values($realParameters));
 		
 		self::handleResponse($response);
 		
@@ -322,7 +322,7 @@ class Route
 		return '#\A' . $url . '\z#i';
 	}
 	
-	private static function getParameterValues(array $handlerParameters, array $urlParameters, Request $request): array
+	private static function getParameters(array $handlerParameters, array $urlParameters, Request $request): array
 	{
 		// ensure the parameters are passed in in the same order they are declared in the method
 		// also check for optional parameters and custom injections
@@ -335,11 +335,11 @@ class Route
 			
 			if (is_object($parameter->getClass()))
 			{
-				$values[] = self::getParameterInjection($parameter, $value, $request);
+				$values[$parameter->getName()] = self::getParameterInjection($parameter, $value, $request);
 			}
 			else
 			{
-				$values[] = self::getParameterValue($parameter, $value);
+				$values[$parameter->getName()] = self::getParameterValue($parameter, $value);
 			}
 		}
 		
