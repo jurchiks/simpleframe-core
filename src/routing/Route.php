@@ -164,7 +164,7 @@ class Route
 			$this->getHandlerParameters(), array_filter($urlParameters), $request
 		);
 		
-		EventHandler::trigger(EventHandler::ON_ROUTE_MATCH, $this->name, $realParameters);
+		EventHandler::trigger(EventHandler::ON_ROUTE_MATCH, $this, $realParameters, $request);
 		
 		$response = ($this->handler)(...$realParameters);
 		
