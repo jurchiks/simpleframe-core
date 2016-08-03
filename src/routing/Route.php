@@ -43,7 +43,7 @@ class Route
 		Request::class,
 	];
 	
-	public function __construct(string $url, callable $handler, string $name)
+	public function __construct(string $name, string $url, callable $handler)
 	{
 		$this->name = $name;
 		$this->handler = $handler;

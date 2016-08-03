@@ -14,7 +14,7 @@ class Router
 	public static function addRoute(string $name, string $url, callable $handler, array $methods = [])
 	{
 		// using name as key only to prevent multiple routes with the same name
-		self::$routes[$name] = (new Route($url, $handler, $name))
+		self::$routes[$name] = (new Route($name, $url, $handler))
 			->setAcceptedMethods(...$methods);
 	}
 	
